@@ -635,6 +635,26 @@ class Parser
             $text
         );
 
+        $text = preg_replace_callback(
+            "/(\={2})(.+?)\\1/",
+            function ($matches) {
+                return '<mark>' .
+                    $this->parseInlineCallback($matches[2]) .
+                    '</mark>';
+            },
+            $text
+        );
+
+        $text = preg_replace_callback(
+            "/(\+{2})(.+?)\\1/",
+            function ($matches) {
+                return '<ins>' .
+                    $this->parseInlineCallback($matches[2]) .
+                    '</ins>';
+            },
+            $text
+        );
+
         return $text;
     }
 
