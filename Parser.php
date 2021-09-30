@@ -463,7 +463,7 @@ class Parser
                 }
 
                 return $this->makeHolder(
-                    "<sup id=\"fnref-{$id}\"><a href=\"#fn-{$id}\" class=\"footnote-ref\">{$id}</a></sup>"
+                    "<sup id=\"fnref-{$id}\"><a href=\"#fn-{$id}\" class=\"footnote-ref\">[{$id}]</a></sup>"
                 );
             },
             $text
