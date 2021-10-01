@@ -58,6 +58,7 @@ class HyperDown
     private $blockParsers = [
         ['code', 10],
         ['shtml', 20],
+        ['detail', 25],
         ['pre', 30],
         ['ahtml', 40],
         ['shr', 50],
@@ -832,6 +833,41 @@ class HyperDown
      *
      * @return bool
      */
+    private function parseBlockDetail(?array $block, int $key, string $line, ?array &$state): bool
+    {
+        if ($this->_html) {
+            if (preg_match("/^\?{3}(\+)?(\s*)(\"(.*?)\")?(\s*)$/", $line, $matches)) {
+                if ($this->isBlock('detail')) {
+                    // $this->setBlock($key)->endBlock();
+                } else {
+                    $this->startBlock('detail', $key, [
+                        $matches[4], $matches[1]
+                    ]);
+                }
+                return false;
+
+            } elseif ($this->isBlock('detail')) {
+                // whitespace indent
+                if (substr($line, 0, 4) === '    ') {
+                    $this->setBlock($key);
+                } else {
+                    $this->setBlock($key)->endBlock();
+                }
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array|null $block
+     * @param int $key
+     * @param string $line
+     * @param array|null $state
+     *
+     * @return bool
+     */
     private function parseBlockShtml(?array $block, int $key, string $line, ?array &$state): bool
     {
         if ($this->_html) {
@@ -930,7 +966,7 @@ class HyperDown
      */
     private function parseBlockPre(?array $block, int $key, string $line, ?array &$state): bool
     {
-        if (preg_match("/^ {4}/", $line)) {
+        if (preg_match("/^ {10}/", $line)) {
             if ($this->isBlock('pre')) {
                 $this->setBlock($key);
             } else {
@@ -1271,6 +1307,7 @@ class HyperDown
             if ('normal' == $type) {
                 // combine two blocks
                 $types = ['list', 'quote'];
+                // $types = ['list', 'quote', 'detail'];
 
                 if ($from == $to && preg_match("/^\s*$/", $lines[$from])
                     && !empty($prevBlock) && !empty($nextBlock)) {
@@ -1372,6 +1409,25 @@ class HyperDown
     private function parseAhtml(array $lines, $value, int $start): string
     {
         return trim(implode("\n", $this->markLines($lines, $start)));
+    }
+
+    /**
+     * parseDetail
+     *
+     * @param array $lines
+     * @param array $parts
+     * @param int $start
+     *
+     * @return string
+     */
+    private function parseDetail(array $lines, array $parts, int $start): string
+    {
+        [$title, $open] = $parts;
+        $str = implode("\n", array_slice($lines, 1, -1));
+        $open = $parts[1] === '+' ? ' open' : '';
+        return preg_match("/^\s*$/", $str) ? '' :
+            '<details' . $open . ">\n<summary>" . $title . "</summary><p>"
+            . $this->parse($str, true, $start) . "</p></details>";
     }
 
     /**
@@ -1669,7 +1725,10 @@ class HyperDown
      * @return string
      */
     private function parseDefinition(): string
+    // private function parseDefinition(array $lines, $value, int $start): string
     {
+        // $str = implode("\n", $this->markLines($lines, $start));
+        // return $str;
         return '';
     }
 
