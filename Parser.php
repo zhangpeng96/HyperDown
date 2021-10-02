@@ -58,6 +58,7 @@ class HyperDown
     private $blockParsers = [
         ['code', 10],
         ['shtml', 20],
+        ['admonition', 24],
         ['detail', 25],
         ['pre', 30],
         ['ahtml', 40],
@@ -868,6 +869,41 @@ class HyperDown
      *
      * @return bool
      */
+    private function parseBlockAdmonition(?array $block, int $key, string $line, ?array &$state): bool
+    {
+        if ($this->_html) {
+            if (preg_match("/^\!{3}(\+)?(\s*)([\w\-]*)(\s*)(\"(.*?)\")?(\s*)$/", $line, $matches)) {
+                if ($this->isBlock('admonition')) {
+                    // $this->setBlock($key)->endBlock();
+                } else {
+                    $this->startBlock('admonition', $key, [
+                        $matches[6], $matches[3]
+                    ]);
+                }
+                return false;
+
+            } elseif ($this->isBlock('admonition')) {
+                // whitespace indent
+                if (substr($line, 0, 4) === '    ') {
+                    $this->setBlock($key);
+                } else {
+                    $this->setBlock($key)->endBlock();
+                }
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array|null $block
+     * @param int $key
+     * @param string $line
+     * @param array|null $state
+     *
+     * @return bool
+     */
     private function parseBlockShtml(?array $block, int $key, string $line, ?array &$state): bool
     {
         if ($this->_html) {
@@ -1428,6 +1464,26 @@ class HyperDown
         return preg_match("/^\s*$/", $str) ? '' :
             '<details' . $open . ">\n<summary>" . $title . "</summary><p>"
             . $this->parse($str, true, $start) . "</p></details>";
+    }
+
+    /**
+     * parseAdmonition
+     *
+     * @param array $lines
+     * @param array $parts
+     * @param int $start
+     *
+     * @return string
+     */
+    private function parseAdmonition(array $lines, array $parts, int $start): string
+    {
+        [$title, $class] = $parts;
+        $str = implode("\n", array_slice($lines, 1, -1));
+        $class = $class ? ' ' . $class : '';
+        return preg_match("/^\s*$/", $str) ? '' :
+            '<div class="admonition' . $class . '">' . "\n"
+            . '<p class="admonition-title">' . $title . "</p>\n"
+            . '<p>' . $this->parse($str, true, $start) . "</p></div>";
     }
 
     /**
