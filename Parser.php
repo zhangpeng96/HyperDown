@@ -1424,7 +1424,7 @@ class HyperDown
     {
         [$title, $open] = $parts;
         $str = implode("\n", array_slice($lines, 1, -1));
-        $open = $parts[1] === '+' ? ' open' : '';
+        $open = $open === '+' ? ' open' : '';
         return preg_match("/^\s*$/", $str) ? '' :
             '<details' . $open . ">\n<summary>" . $title . "</summary><p>"
             . $this->parse($str, true, $start) . "</p></details>";
